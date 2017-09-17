@@ -1,10 +1,12 @@
 # 정규표현식 사용하기
 
- 	import re # 일단 임포트부터 하자
- 	result = re.match('Lux', 'Lux, the Lady of Luminosity')
- 	# 첫번째 인자는 '패턴', 두 번째 인자는 문자열 소스
- 	# 패턴 자체가 복잡하면 아래와같이 변수화해서 쓰면 된다.
- 	pattern = re.compile('Lux')
+```python
+ import re # 일단 임포트부터 하자 
+ result = re.match('Lux', 'Lux, the Lady of Luminosity')
+ # 첫번째 인자는 '패턴', 두 번째 인자는 문자열 소스
+ # 패턴 자체가 복잡하면 아래와같이 변수화해서 쓰면 된다.
+ pattern = re.compile('Lux')
+ ```
  
  
 #### match
