@@ -1,5 +1,7 @@
 import utils
 import pickle
+import os
+
 
 class NaverWebtoonCrawler:
     def __init__(self, webtoon_id):
@@ -17,12 +19,7 @@ class NaverWebtoonCrawler:
         현재 가지고있는 episode_list가 웹상의 최신 episode까지 가지고 있는지
         :return: boolean값
         """
-        if len(self.episode_list) == 0:
-            return False
-        if self.total_episode_count == int(self.episode_list[0].no):
-            return True
-        else:
-            return False
+        return len(self.episode_list) == self.total_episode_count
 
     def update_episode_list(self, force_update=False):
         """
@@ -35,23 +32,28 @@ class NaverWebtoonCrawler:
 
         if len(self.episode_list) == 0:
             self.episode_list = utils.get_webtoon_episode_list(self.webtoon_id, 10000)
+
         recent_episode_list = []
         recent_episode_list += utils.get_webtoon_episode_list(self.webtoon_id)
+
         page = 1
-        while int(self.episode_list[0].no) < int(recent_episode_list[-1].no):
-            page += 1
-            recent_episode_list += utils.get_webtoon_episode_list(self.webtoon_id, page)
 
         if force_update:
-            self.episode_list = recent_episode_list
-            return len(recent_episode_list)
+            while int(recent_episode_list[-1].no) != 1:
+                page += 1
+                recent_episode_list += utils.get_webtoon_episode_list(self.webtoon_id, page)
 
-        # force_update 아닐 경우에는 어떻게 할지 고민..
+            self.episode_list = recent_episode_list
+            return len(self.episode_list)
+
         else:
+            while int(self.episode_list[0].no) < int(recent_episode_list[-1].no):
+                page += 1
+                recent_episode_list += utils.get_webtoon_episode_list(self.webtoon_id, page)
+
             episode_number_to_update = int(recent_episode_list[0].no) - int(self.episode_list[0].no)
             self.episode_list = recent_episode_list[:episode_number_to_update] + self.episode_list
             return episode_number_to_update
-
 
     def save(self, path=None):
         """
@@ -59,23 +61,49 @@ class NaverWebtoonCrawler:
         pickle로 self.episode_list를 저장
         :return: 성공여부
         """
-        filename = 'db/{}.txt'.format(self.webtoon_id)
-        try:
-            pickle.dump(self.episode_list, open(filename, 'wb'))
-            return True
-        except:
-            return False
+        if not path:
+            try:
+                if not os.path.isdir('db'):
+                    os.mkdir('db')
+                filename = 'db/{}.txt'.format(self.webtoon_id)
+                pickle.dump(self.episode_list, open(filename, 'wb'))
+                return True
+            except:
+                return False
+        else:
+            try:
+                if not os.path.isdir(path):
+                    os.mkdir(path)
+                filename = '{}/{},txt'.format(path, self.webtoon_id)
+                pickle.dump(self.episode_list, open(filename, 'wb'))
+                return True
+            except:
+                return False
 
-    def load(self, path=None):
+    def load(self, path=None, init = False):
         """
         현재폴더를 기준으로 db/<webtoon_id>.txt 파일의 내용을 불러와
         pickle로 self.episode_list를 복원
         :return:
         """
-        filename = 'db/{}.txt'.format(self.webtoon_id)
-        self.episode_list = pickle.load(open(filename, 'rb'))
+        if not path:
+            try:
+                filename = 'db/{}.txt'.format(self.webtoon_id)
+                self.episode_list = pickle.load(open(filename, 'rb'))
+            except FileNotFoundError:
+                print('파일이 없습니다.')
+        else:
+            try:
+                filename = '{}/{},txt'.format(path, self.webtoon_id)
+                self.episode_list = pickle.load(open(filename, 'rb'))
+            except FileNotFoundError:
+                if not init:
+                    print('파일이 없습니다.')
 
-#crawler1 = NaverWebtoonCrawler('690020')
-#crawler1.update_episode_list(True)
-#for ep in crawler1.episode_list:
+
+crawler1 = NaverWebtoonCrawler('690020')
+crawler1.load('db23')
+for ep in crawler1.episode_list:
     print(ep)
+
+
